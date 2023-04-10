@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>全屏文字逐渐变大效果</title>
+    <style type="text/css">
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        @keyframes zoom {
+            from {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            to {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        @keyframes borderAround {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            25% {
+                transform: translate(100%, 0);
+            }
+
+            50% {
+                transform: translate(100%, 100%);
+            }
+
+            75% {
+                transform: translate(0, 100%);
+            }
+        }
+
+        @keyframes rotate {
+            0% {
+                transform: rotate(0);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .random-text {
+            position: absolute;
+            animation: zoom 2s linear;
+            animation-fill-mode: forwards;
+            text-align: center;
+            box-shadow: 2px 2px 10px;
+            cursor: pointer;
+        }
+
+        .first-text {
+            position: relative;
+            text-align: center;
+            /* animation: zoom 2s linear; */
+            animation-fill-mode: forwards;
+            box-shadow: 2px 2px 10px;
+            cursor: pointer;
+        }
+
+        .first-text::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            /* left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0; */
+            /* border: 2px solid #cd0000; */
+            background-image: conic-gradient(#f12441 20deg, transparent 120deg);
+            width: 150%;
+            height: 150%;
+            /* animation: rotate 2s linear infinite; */
+        }
+
+        .translation {
+            font-size: 16px;
+        }
+
+        .random-text span {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="./words.js"></script>
+    <script type="text/javascript">
+        document.addEventListener("visibilitychange", visibleHandle);
+
+        const array = words;
+        const colors = ["#0099ff", "#00cc99", "#ffcc00", "#ff6600", "#cc66ff"];
+        let i = 0;
+        // let interval = setInterval(addElement, 2000);
+
+        addFirstElement(array[0]);
+
+        function mouseEnter(e) {
+            e.target.style['animation-play-state'] = 'paused';
+            interval && clearInterval(interval);
+        }
+
+        function mouseLeave(e) {
+            e.target.style['animation-play-state'] = 'running';
+            interval = setInterval(addElement, 2000);
+        }
+
+        async function clickHandle(e) {
+            let result = '';
+            const parentNode = e.target.parentNode;
+            for (let i = 0; i < parentNode.children.length; i++) {
+                result += parentNode.children[i].innerHTML + "\n";
+            }
+
+            await navigator.clipboard.writeText(result);
+            alert('copied!')
+        }
+
+        function addFirstElement(text) {
+            const span = document.createElement("span");
+            span.innerHTML = `
+                ${text.word}<br />
+                <span class="translation">${text.translation}</span>
+            `;
+            span.classList.add("first-text")
+            document.body.appendChild(span);
+        }
+
+        function addElement() {
+            const oldSpan = document.body.querySelector(".random-text");
+            if (oldSpan) {
+                oldSpan.removeEventListener("mouseenter", mouseEnter);
+                oldSpan.removeEventListener("mouseleave", mouseLeave);
+                document.body.removeChild(oldSpan);
+            }
+
+            const text = array[i];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+
+            const textContainer = document.createElement("p");
+            const en = document.createElement("span");
+            en.innerHTML = text.word;
+            const ch = document.createElement("span");
+            ch.innerHTML = text.translation;
+            ch.classList.add("translation");
+
+            // const span = document.createElement("span");
+            // span.innerHTML = `
+            //     ${text.word}<br />
+            //     <span class="translation">${text.translation}</span>
+            // `;
+            textContainer.style.color = color;
+            textContainer.classList.add("random-text");
+            // span.style.top = Math.random() * (window.innerHeight - 400) + 200 + "px";
+            // span.style.left = Math.random() * (window.innerWidth - 400) + 200 + "px";
+
+            textContainer.appendChild(en);
+            textContainer.appendChild(ch);
+
+            document.body.appendChild(textContainer);
+            textContainer.addEventListener("mouseenter", mouseEnter);
+            textContainer.addEventListener("mouseleave", mouseLeave);
+            textContainer.addEventListener("click", clickHandle);
+            i++;
+            if (i == array.length) {
+                i = 0;
+            }
+        }
+
+        function visibleHandle() {
+            if (document.visibilityState === 'hidden') {
+                interval && clearInterval(interval);
+            }
+
+            if (document.visibilityState === 'visible') {
+                if (interval) clearInterval(interval);
+                interval = setInterval(addElement, 2000);
+            }
+        }
+    </script>
+</body>
+
+</html>
